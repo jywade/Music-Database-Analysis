@@ -1,0 +1,100 @@
+Q1
+What are the top 10 bands that has written the most rock music?
+
+WITH t1
+     AS (SELECT *
+         FROM   track t
+                JOIN genre g
+                  ON g.GenreId = t.GenreId
+                JOIN album a
+                  ON a.AlbumId = t.AlbumId
+                JOIN artist ar
+                  ON ar.ArtistId = a.ArtistId
+		)
+SELECT artistid,
+       [name:2] AS Name,
+       Count(*) AS Songs
+FROM   t1
+WHERE  [name:1] = "Rock"
+GROUP  BY 2
+ORDER  BY 3 DESC
+LIMIT 10; 
+
+
+Q2
+What is the average revenue per invoice for each genre?
+
+SELECT [name:1] AS Genre,
+       Round(Avg(total), 1) AS Avg_Rev_Per_Invoice
+FROM   (SELECT *
+        FROM   track t
+               JOIN genre g
+                 ON t.genreid = g.genreid
+               JOIN invoiceline il
+                 ON t.trackid = il.trackid
+               JOIN invoice i
+                 ON i.invoiceid = il.invoiceid
+				) sub
+GROUP  BY 1
+ORDER  BY 2 DESC; 
+
+
+
+Q3
+Among the top 10 countries, which countries have collectively spent an above-average amount on Latin music?
+
+WITH t1 AS
+(
+       SELECT *
+       FROM   track t
+       JOIN   genre g
+       ON     t.genreid = g.genreid
+       JOIN   invoiceline il
+       ON     il.trackid = t.trackid
+       JOIN   invoice i
+       ON     i.invoiceid = il.invoiceid
+       JOIN   customer c
+       ON     c.customerid = i.customerid )
+SELECT   country,
+         [Name:1] AS genre,
+         Round(Sum(total),0) money_spent
+FROM     t1
+WHERE    genre = 'Latin'
+GROUP BY 1,
+         2
+HAVING   money_spent >
+         (
+                SELECT Avg(total)
+                FROM   invoice)
+ORDER BY 3 DESC limit 10;
+
+
+
+Q4 
+Who are the top 5 customers with the highest total expenditure on jazz music? 
+In which country does the highest-spending customer on jazz music reside?
+
+WITH t1 AS
+(
+       SELECT *
+       FROM   track t
+       JOIN   genre g
+       ON     t.genreid = g.genreid
+       JOIN   invoiceline il
+       ON     il.trackid = t.trackid
+       JOIN   invoice i
+       ON     i.invoiceid = il.invoiceid
+       JOIN   customer c
+       ON     c.customerid = i.customerid )
+SELECT   firstname
+                  || ' '
+                  || lastname AS [CustomerName],
+         [Name:1] AS Genre,
+		 Country,
+         Round(Sum(total),0)  AS [Total Spent]
+FROM     t1
+WHERE    genre = 'Jazz'
+GROUP BY 1,
+         2
+ORDER BY 4 DESC limit 5;
+
